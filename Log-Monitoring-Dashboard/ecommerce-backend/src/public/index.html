@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester - E-Commerce Observability</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 900px; margin: 0 auto; background: #121212; color: #ffffff; }
+        .card { background: #1e1e1e; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 1.5rem; border: 1px solid #333; }
+        h1 { color: #4dabf7; text-align: center; }
+        h3 { margin-top: 0; color: #a5d8ff; }
+        button { background: #339af0; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #228be6; }
+        pre { background: #000; color: #00ff00; padding: 1rem; border-radius: 6px; overflow-x: auto; border: 1px solid #333; }
+        input { padding: 10px; margin-right: 8px; border: 1px solid #444; border-radius: 6px; background: #2b2b2b; color: white; width: 140px; }
+        input:focus { outline: none; border-color: #339af0; }
+        .row { display: flex; gap: 10px; align-items: center; }
+        .desc { font-size: 0.85rem; color: #888; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>API Tester Dashboard</h1>
+    <p style="text-align: center; color: #aaa;">Since the /login, /signup, and /order endpoints expect POST requests with data, you can use these buttons to easily trigger them right from your browser!</p>
+    
+    <div class="card">
+        <h3>1. Signup (POST /signup)</h3>
+        <p class="desc">Creates a new user in the PostgreSQL database.</p>
+        <div class="row">
+            <input type="text" id="signupUser" placeholder="Username" value="demouser">
+            <input type="password" id="signupPass" placeholder="Password" value="password123">
+            <button onclick="testPost('/signup', {username: document.getElementById('signupUser').value, password: document.getElementById('signupPass').value})">Execute Signup</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>2. Login (POST /login)</h3>
+        <p class="desc">Authenticates the user and returns their User ID.</p>
+        <div class="row">
+            <input type="text" id="loginUser" placeholder="Username" value="demouser">
+            <input type="password" id="loginPass" placeholder="Password" value="password123">
+            <button onclick="testPost('/login', {username: document.getElementById('loginUser').value, password: document.getElementById('loginPass').value})">Execute Login</button>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>3. Get Products (GET /products)</h3>
+        <p class="desc">Retrieves items. Includes a random delay to simulate slow requests (triggers <b>WARN</b> logs).</p>
+        <div class="row">
+            <button onclick="testGet('/products')" style="background: #fcc419; color: black;">Execute Get Products</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>4. Submit Order (POST /order)</h3>
+        <p class="desc">Creates an order. Has a 30% chance of payment failure (triggers <b>ERROR</b> logs).</p>
+        <div class="row">
+            <input type="number" id="orderUserId" placeholder="User ID" value="1">
+            <button onclick="testPost('/order', {userId: document.getElementById('orderUserId').value})" style="background: #ff6b6b;">Execute Submit Order</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Server Response:</h3>
+        <pre id="output">Waiting for action...</pre>
+    </div>
+
+    <script>
+        async function testGet(url) {
+            document.getElementById('output').innerText = 'Loading...';
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                document.getElementById('output').innerText = `Status: ${res.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('output').innerText = err.message;
+            }
+        }
+        
+        async function testPost(url, body) {
+            document.getElementById('output').innerText = 'Loading...';
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                document.getElementById('output').innerText = `Status: ${res.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('output').innerText = err.message;
+            }
+        }
+    </script>
+</body>
+</html>
